@@ -168,7 +168,52 @@ is_last_hijri_day() {
 }
 
 # ==============================================================================
-# SECTION 3: PRAYER TIMES CALCULATION
+# SECTION 3: QIBLAH DIRECTION CALCULATION
+# ==============================================================================
+
+# Function to calculate Qiblah direction in decimal degrees from North
+# Usage: get_qiblah_direction <longitude> <latitude>
+get_qiblah_direction() {
+    local longitude=$1
+    local latitude=$2
+    
+    awk -v lon="$longitude" -v lat="$latitude" "$AWK_LIB"'
+    BEGIN {
+        MAKKAH_LATI = 21.42249
+        MAKKAH_LONG = 39.826174
+        
+        lamda = MAKKAH_LONG - lon
+        num = dcos(MAKKAH_LATI) * dsin(lamda)
+        denom = (dsin(MAKKAH_LATI) * dcos(lat) - dcos(MAKKAH_LATI) * dsin(lat) * dcos(lamda))
+        
+        qiblah_dir = (180 / PI) * atan2(num, denom)
+        
+        # Adjust for 0-360 range
+        if (qiblah_dir < 0) {
+            qiblah_dir += 360
+        }
+        
+        print qiblah_dir
+    }'
+}
+
+# Function to format degrees into DMS (Degrees, Minutes, Seconds)
+# Usage: format_qiblah_dms <decimal_degrees>
+format_qiblah_dms() {
+    local deg=$1
+    awk -v d="$deg" 'BEGIN {
+        h = int(d)
+        m_float = (d - h) * 60
+        m = int(m_float)
+        s_float = (m_float - m) * 60
+        s = int(s_float)
+        
+        printf "%d° %d'\'' %d'\'\''\n", h, m, s
+    }'
+}
+
+# ==============================================================================
+# SECTION 4: PRAYER TIMES CALCULATION
 # ==============================================================================
 
 FULL_PRAYER_LIB="$AWK_LIB"'
@@ -344,6 +389,9 @@ print_prayer_times_json() {
     # Check if it is the last day of the Hijri month
     local is_last=$(is_last_hijri_day "$h_year" "$h_month" "$h_day" | tr '[:upper:]' '[:lower:]')
 
+    local qiblah_dir=$(get_qiblah_direction "$lon" "$lat")
+    local qiblah_dms=$(format_qiblah_dms "$qiblah_dir")
+
     printf '{\n'
     printf '  "prayers": {\n'
     printf '    "fajr": "%s",\n'      "$(format_time $fajr)"
@@ -364,6 +412,10 @@ print_prayer_times_json() {
     printf '    "full_ar": "%s",\n'    "$h_full_ar"
     printf '    "full_en": "%s",\n'    "$h_full_en"
     printf '    "is_last_day": "%s"\n' "$is_last"
+    printf '  },\n'
+    printf '  "qiblah": {\n'
+    printf '    "direction": "%s",\n'   "$qiblah_dir"
+    printf '    "direction_dms": "%s"\n' "$qiblah_dms"
     printf '  }\n'
     printf '}\n'
 }

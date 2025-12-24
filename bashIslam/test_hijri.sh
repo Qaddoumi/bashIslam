@@ -36,21 +36,30 @@ echo "----------------------------"
 # Python: HijriDate.get_hijri(date(2023, 10, 25))
 PY_RES=$(get_python_hijri "h = HijriDate.get_hijri(date(2023, 10, 25)); print(f'{h.year} {h.month} {h.day}')")
 BASH_RES=$(gregorian_to_hijri_date 2023 10 25)
+echo "BASH: $BASH_RES | PY: $PY_RES"
 compare "Gregorian to Hijri (2023-10-25)" "$PY_RES" "$BASH_RES"
+
+PY_RES=$(get_python_hijri "h = HijriDate.get_hijri(date(2025, 12, 24)); print(f'{h.year} {h.month} {h.day}')")
+BASH_RES=$(gregorian_to_hijri_date 2025 12 24)
+echo "BASH: $BASH_RES | PY: $PY_RES"
+compare "Gregorian to Hijri (2025-12-24)" "$PY_RES" "$BASH_RES"
 
 # Test 2: Format Numeric (lang=0)
 PY_RES=$(get_python_hijri "h = HijriDate(1445, 4, 10); print(h.format(0))")
 BASH_RES=$(format_hijri 1445 4 10 0)
+echo "BASH: $BASH_RES | PY: $PY_RES"
 compare "Format Numeric (1445-04-10)" "$PY_RES" "$BASH_RES"
 
 # Test 3: Format English (lang=2)
 PY_RES=$(get_python_hijri "h = HijriDate(1445, 9, 1); print(h.format(2))")
 BASH_RES=$(format_hijri 1445 9 1 2)
+echo "BASH: $BASH_RES | PY: $PY_RES"
 compare "Format English (Ramadan)" "$PY_RES" "$BASH_RES"
 
 # Test 4: Check if Last Day of Month
 PY_RES=$(get_python_hijri "h = HijriDate(1445, 8, 30); print(h.is_last())")
 BASH_RES=$(is_last_hijri_day 1445 8 30)
+echo "BASH: $BASH_RES | PY: $PY_RES"
 compare "Is Last Day (1445-08-30)" "$PY_RES" "$BASH_RES"
 
 # Test 5: Hijri to Gregorian Conversion
@@ -58,6 +67,7 @@ compare "Is Last Day (1445-08-30)" "$PY_RES" "$BASH_RES"
 # We normalize them for comparison.
 PY_RES=$(get_python_hijri "h = HijriDate(1445, 4, 10); g = h.to_gregorian(); print(f'{g.year} {g.month} {g.day}')")
 BASH_RES=$(hijri_to_gregorian_date 1445 4 10 | awk '{print $1, $2, int($3)}')
+echo "BASH: $BASH_RES | PY: $PY_RES"
 compare "Hijri to Gregorian" "$PY_RES" "$BASH_RES"
 
 echo "----------------------------"

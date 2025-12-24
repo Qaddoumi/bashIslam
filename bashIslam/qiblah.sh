@@ -41,11 +41,9 @@ format_qiblah_dms() {
         h = int(d)
         m_float = (d - h) * 60
         m = int(m_float)
-        s = int((m_float - m) * 60 + 0.5)
+        s_float = (m_float - m) * 60
+        s = int(s_float)
         
-        if (s == 60) { s = 0; m += 1; }
-        if (m == 60) { m = 0; h += 1; }
-        
-        printf "%d° %02d'\'' %02d'\'\''\n", h, m, s
+        printf "%d° %d'\'' %d'\'\''\n", h, m, s
     }'
 }

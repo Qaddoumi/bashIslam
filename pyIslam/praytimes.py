@@ -2,8 +2,8 @@
 
 from math import pi, atan, sqrt, tan, floor
 from datetime import time, datetime
-from pyIslam.hijri import HijriDate
-from pyIslam.baselib import dcos, dsin, equation_of_time, gregorian_to_julian
+from hijri import HijriDate
+from baselib import dcos, dsin, equation_of_time, gregorian_to_julian
 from math import *
 
 

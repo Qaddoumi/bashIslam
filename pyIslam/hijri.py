@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from datetime import date, timedelta
-from pyIslam.baselib import julian_to_hijri, gregorian_to_julian, hijri_to_julian, julian_to_gregorian
+from baselib import julian_to_hijri, gregorian_to_julian, hijri_to_julian, julian_to_gregorian
 
 
 class HijriDate:
@@ -16,7 +16,7 @@ class HijriDate:
 
         if isinstance(month, int):
             if not (month in range(1, 13)):
-                raise ValueError('month should be bitween 1 and 12')
+                raise ValueError('month should be between 1 and 12')
             else:
                 self.month = month
         else:
@@ -24,7 +24,7 @@ class HijriDate:
 
         if isinstance(day, int):
             if not (month in range(1, 31)):
-                raise ValueError('day should be bitween 1 and 30')
+                raise ValueError('day should be between 1 and 30')
             else:
                 self.day = day
         else:

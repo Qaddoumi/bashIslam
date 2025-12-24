@@ -144,14 +144,27 @@ gregorian_to_hijri_date() {
     julian_to_hijri "$jd" "$corr"
 }
 
+# Global Month Names
+HIJRI_MONTHS_AR=("محرم" "صفر" "ربيع الأول" "ربيع الثاني" "جمادى الأولى" "جمادى الثانية" "رجب" "شعبان" "رمضان" "شوال" "ذو القعدة" "ذو الحجة")
+HIJRI_MONTHS_EN=("Moharram" "Safar" "Rabie-I" "Rabie-II" "Jumada-I" "Jumada-II" "Rajab" "Shaban" "Ramadan" "Shawwal" "Delqada" "Delhijja")
+
 format_hijri() {
     local y=$1 m=$2 d=$3 lang=$4
-    local -a ar_months=("محرم" "صفر" "ربيع الأول" "ربيع الثاني" "جمادى الأولى" "جمادى الثانية" "رجب" "شعبان" "رمضان" "شوال" "ذو القعدة" "ذو الحجة")
-    local -a en_months=("Moharram" "Safar" "Rabie-I" "Rabie-II" "Jumada-I" "Jumada-II" "Rajab" "Shaban" "Ramadan" "Shawwal" "Delqada" "Delhijja")
-
-    if [[ "$lang" == "1" ]]; then echo "$d ${ar_months[$((m-1))]} $y"
-    elif [[ "$lang" == "2" ]]; then echo "$d ${en_months[$((m-1))]} $y"
+    if [[ "$lang" == "1" ]]; then echo "$d ${HIJRI_MONTHS_AR[$((m-1))]} $y"
+    elif [[ "$lang" == "2" ]]; then echo "$d ${HIJRI_MONTHS_EN[$((m-1))]} $y"
     else printf "%02d-%02d-%04d\n" "$d" "$m" "$y"; fi
+}
+
+is_last_hijri_day() {
+    local y=$1 m=$2 d=$3
+    local jd=$(hijri_to_julian "$y" "$m" "$d")
+    local next_month=$(julian_to_hijri "$((jd + 1))" | awk '{print $2}')
+    
+    if [[ "$m" != "$next_month" ]]; then
+        echo "True"
+    else
+        echo "False"
+    fi
 }
 
 # ==============================================================================
@@ -246,18 +259,23 @@ get_prayer_times() {
 }
 
 get_night_times() {
-    local f=$1 m=$2
-    awk -v f="$f" -v m="$m" 'BEGIN {
+    local f_time=$1
+    local m_time=$2
+    awk -v f="$f_time" -v m="$m_time" 'BEGIN {
         diff = (24.0 - (m - f))
-        print m + (diff / 2.0), m + (2 * diff / 3.0)
+        midnight = m + (diff / 2.0)
+        last_third = m + (2 * diff / 3.0)
+        print midnight, last_third
     }'
 }
 
 format_time() {
-    local val=$1
-    awk -v val="$val" 'BEGIN {
-        hours = val % 24; if (hours < 0) hours += 24
-        h = int(hours); m = int((hours - h) * 60 + 0.5)
+    local decimal_hours=$1
+    awk -v val="$decimal_hours" 'BEGIN {
+        hours = val % 24
+        if (hours < 0) hours += 24
+        h = int(hours)
+        m = int((hours - h) * 60 + 0.5)
         if (m == 60) { h = (h + 1) % 24; m = 0; }
         printf "%02d:%02d:00\n", h, m
     }'
@@ -272,22 +290,27 @@ get_elevation() {
 
 calculate_prayer_times() {
     local lon=$1 lat=$2 timezone=$3 year=$4 month=$5 day=$6
-    local method_id=${7:-2} madhab=${8:-1} summer_time=${9:-0} elevation=${10:-0}
+    local method_id=${7:-2} asr_madhab=${8:-1} summer_time=${9:-0} elevation=${10:-0}
 
     (( elevation == 0 )) && elevation=$(get_elevation "$lat" "$lon")
 
     local params=$(get_method_params "$method_id")
-    read f_ang i_type i_v1 i_v2 <<< "$params"
+    read fajr_angle ishaa_type ishaa_v1 ishaa_v2 <<< "$params"
     
-    local ishaa_param="$i_v1"
-    if (( i_type == 1 )); then
+    local ishaa_param="$ishaa_v1"
+    if (( ishaa_type == 1 )); then
         local hijri=$(gregorian_to_hijri_date "$year" "$month" "$day")
-        read hy hm hd <<< "$hijri"
-        (( hm == 9 )) && ishaa_param="FIXED:$i_v2" || ishaa_param="FIXED:$i_v1"
+        read h_year h_month h_day <<< "$hijri"
+        if (( h_month == 9 )); then
+            ishaa_param="FIXED:$ishaa_v2"
+        else
+            ishaa_param="FIXED:$ishaa_v1"
+        fi
     fi
     
     local jd=$(gregorian_to_julian "$year" "$month" "$day" 12 0 0)
-    local raw=$(get_prayer_times "$lat" "$lon" "$timezone" "$jd" "$madhab" "$f_ang" "$ishaa_param" "$elevation")
+    
+    local raw=$(get_prayer_times "$lat" "$lon" "$timezone" "$jd" "$asr_madhab" "$fajr_angle" "$ishaa_param" "$elevation")
     read fajr sunrise dhuhr asr maghreb ishaa <<< "$raw"
     
     if (( summer_time == 1 )); then
@@ -313,11 +336,13 @@ print_prayer_times_json() {
     local hijri_raw=$(gregorian_to_hijri_date "$year" "$month" "$day")
     read h_year h_month h_day <<< "$hijri_raw"
 
-    local -a ar_months=("محرم" "صفر" "ربيع الأول" "ربيع الثاني" "جمادى الأولى" "جمادى الثانية" "رجب" "شعبان" "رمضان" "شوال" "ذو القعدة" "ذو الحجة")
-    local -a en_months=("Moharram" "Safar" "Rabie-I" "Rabie-II" "Jumada-I" "Jumada-II" "Rajab" "Shaban" "Ramadan" "Shawwal" "Delqada" "Delhijja")
+    local m_ar=${HIJRI_MONTHS_AR[$((h_month-1))]}
+    local m_en=${HIJRI_MONTHS_EN[$((h_month-1))]}
+    local h_full_ar=$(format_hijri $h_year $h_month $h_day 1)
+    local h_full_en=$(format_hijri $h_year $h_month $h_day 2)
     
-    local m_ar=${ar_months[$((h_month-1))]}
-    local m_en=${en_months[$((h_month-1))]}
+    # Check if it is the last day of the Hijri month
+    local is_last=$(is_last_hijri_day "$h_year" "$h_month" "$h_day" | tr '[:upper:]' '[:lower:]')
 
     printf '{\n'
     printf '  "prayers": {\n'
@@ -336,8 +361,9 @@ print_prayer_times_json() {
     printf '    "month_name_ar": "%s",\n' "$m_ar"
     printf '    "month_name_en": "%s",\n' "$m_en"
     printf '    "year": %d,\n'         "$h_year"
-    printf '    "full_ar": "%d %s %d",\n' "$h_day" "$m_ar" "$h_year"
-    printf '    "full_en": "%d %s %d"\n'  "$h_day" "$m_en" "$h_year"
+    printf '    "full_ar": "%s",\n'    "$h_full_ar"
+    printf '    "full_en": "%s",\n'    "$h_full_en"
+    printf '    "is_last_day": "%s"\n' "$is_last"
     printf '  }\n'
     printf '}\n'
 }

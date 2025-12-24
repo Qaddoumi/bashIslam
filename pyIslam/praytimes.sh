@@ -82,19 +82,19 @@ get_method_params() {
 get_prayer_times() {
     local lat=$1
     local lon=$2
-    local tz=$3
+    local timezone=$3
     local jd=$4
     local asr_madhab=${5:-1}
     local fajr_angle=${6:-18.0}
     local ishaa_param=${7:-18.0}
     
     # We pass FULL_PRAYER_LIB to ensure equation_of_time is defined
-    awk -v lat="$lat" -v lon="$lon" -v tz="$tz" -v jd="$jd" \
+    awk -v lat="$lat" -v lon="$lon" -v timezone="$timezone" -v jd="$jd" \
         -v madhab="$asr_madhab" -v fa="$fajr_angle" -v ip="$ishaa_param" \
         "$FULL_PRAYER_LIB"'
     BEGIN {
         # Dhuhr calculation
-        ld = (tz * 15 - lon) / 15
+        ld = (timezone * 15 - lon) / 15
         time_eq = equation_of_time(jd)
         dhuhr = 12 + ld + (time_eq / 60)
         
@@ -144,13 +144,13 @@ format_time() {
 # ==============================================================================
 # High-Level API: calculate_prayer_times
 # This is the main entry point, matching Python's PrayerConf + Prayer usage
-# Usage: calculate_prayer_times <lon> <lat> <tz> <year> <month> <day> [method] [madhab] [summer_time]
+# Usage: calculate_prayer_times <lon> <lat> <timezone> <year> <month> <day> [method] [madhab] [summer_time]
 # Returns: Fajr Sunrise Dhuhr Asr Maghreb Ishaa Midnight LastThird (as decimal hours)
 # ==============================================================================
 calculate_prayer_times() {
     local lon=$1
     local lat=$2
-    local tz=$3
+    local timezone=$3
     local year=$4
     local month=$5
     local day=$6
@@ -179,7 +179,7 @@ calculate_prayer_times() {
     local jd=$(gregorian_to_julian "$year" "$month" "$day" 12 0 0)
     
     # Get prayer times
-    local raw=$(get_prayer_times "$lat" "$lon" "$tz" "$jd" "$asr_madhab" "$fajr_angle" "$ishaa_param")
+    local raw=$(get_prayer_times "$lat" "$lon" "$timezone" "$jd" "$asr_madhab" "$fajr_angle" "$ishaa_param")
     read fajr sunrise dhuhr asr maghreb ishaa <<< "$raw"
     
     # Apply summer time adjustment if enabled
@@ -202,7 +202,7 @@ calculate_prayer_times() {
 
 # ==============================================================================
 # Formatted Output: print_prayer_times
-# Usage: print_prayer_times <lon> <lat> <tz> <year> <month> <day> [method] [madhab]
+# Usage: print_prayer_times <lon> <lat> <timezone> <year> <month> <day> [method] [madhab]
 # ==============================================================================
 print_prayer_times() {
     local raw=$(calculate_prayer_times "$@")

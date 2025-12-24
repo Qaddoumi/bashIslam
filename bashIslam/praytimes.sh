@@ -325,4 +325,5 @@ optional arguments: <method> <madhab> <summer_time> <elevation>"
     shift
 done
 
+# example : ./praytimes.sh --lat 31.986 --lon 35.898 --timezone 3 --year 2025 --month 12 --day 24 --method 20 --madhab 1 --summer-time 0 --elevation 950
 print_prayer_times_json $LON $LAT $TIMEZONE $YEAR $MONTH $DAY $METHOD $MADHAB $SUMMER_TIME $ELEV

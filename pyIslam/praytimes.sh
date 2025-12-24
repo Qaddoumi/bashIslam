@@ -39,9 +39,15 @@ function get_asr_angle(madhab, lat, jd) {
     x_val = (dsin(lat) * dsin(delta) + dcos(lat) * dcos(delta))
     a = atan2(x_val, sqrt(1 - x_val * x_val))
     target = madhab + (1 / tan(a))
-    # Python: return 90 - (180 / pi) * (atan(x) + 2 * atan(1))
-    # 2 * atan(1) = pi/2
     return 90 - (180 / PI) * (atan2(target, 1) + 2 * atan2(1, 1))
+}
+
+# NEW: Calculate elevation-adjusted angle for sunset/sunrise
+function elevation_angle(elevation_meters) {
+    # Formula: additional angle = arccos(R / (R + h))
+    # Where R = Earth radius (6371000 m), h = elevation
+    # Simplified approximation: 0.0347 * sqrt(elevation)
+    return 0.0347 * sqrt(elevation_meters)
 }
 '
 
@@ -87,21 +93,27 @@ get_prayer_times() {
     local asr_madhab=${5:-1}
     local fajr_angle=${6:-18.0}
     local ishaa_param=${7:-18.0}
+    local elevation=${8:-0}  # NEW: elevation parameter
     
     # We pass FULL_PRAYER_LIB to ensure equation_of_time is defined
     awk -v lat="$lat" -v lon="$lon" -v timezone="$timezone" -v jd="$jd" \
         -v madhab="$asr_madhab" -v fa="$fajr_angle" -v ip="$ishaa_param" \
+        -v elev="$elevation" \
         "$FULL_PRAYER_LIB"'
     BEGIN {
+        # Calculate elevation adjustment
+        elev_correction = elevation_angle(elev)
+        sunrise_angle = 90.83333 + elev_correction
+        
         # Dhuhr calculation
         ld = (timezone * 15 - lon) / 15
         time_eq = equation_of_time(jd)
         dhuhr = 12 + ld + (time_eq / 60)
         
         fajr = dhuhr - get_time_for_angle(fa + 90, lat, jd)
-        sunrise = dhuhr - get_time_for_angle(90.83333, lat, jd)
+        sunrise = dhuhr - get_time_for_angle(sunrise_angle, lat, jd)
         asr = dhuhr + get_time_for_angle(get_asr_angle(madhab, lat, jd), lat, jd)
-        maghreb = dhuhr + get_time_for_angle(90.83333, lat, jd)
+        maghreb = dhuhr + get_time_for_angle(sunrise_angle, lat, jd)  # Use same angle as sunrise
         
         if (ip ~ /FIXED/) {
             split(ip, parts, ":")
@@ -144,7 +156,7 @@ format_time() {
 # ==============================================================================
 # High-Level API: calculate_prayer_times
 # This is the main entry point, matching Python's PrayerConf + Prayer usage
-# Usage: calculate_prayer_times <lon> <lat> <timezone> <year> <month> <day> [method] [madhab] [summer_time]
+# Usage: calculate_prayer_times <lon> <lat> <timezone> <year> <month> <day> [method] [madhab] [summer_time] [elevation]
 # Returns: Fajr Sunrise Dhuhr Asr Maghreb Ishaa Midnight LastThird (as decimal hours)
 # ==============================================================================
 calculate_prayer_times() {
@@ -157,6 +169,7 @@ calculate_prayer_times() {
     local method_id=${7:-2}
     local asr_madhab=${8:-1}
     local summer_time=${9:-0}
+    local elevation=${10:-0}  # elevation parameter (meters)
     
     # Get method parameters (like Python's LIST_FAJR_ISHA_METHODS lookup)
     local params=$(get_method_params "$method_id")
@@ -178,8 +191,8 @@ calculate_prayer_times() {
     # Calculate Julian Day
     local jd=$(gregorian_to_julian "$year" "$month" "$day" 12 0 0)
     
-    # Get prayer times
-    local raw=$(get_prayer_times "$lat" "$lon" "$timezone" "$jd" "$asr_madhab" "$fajr_angle" "$ishaa_param")
+    # Get prayer times with elevation
+    local raw=$(get_prayer_times "$lat" "$lon" "$timezone" "$jd" "$asr_madhab" "$fajr_angle" "$ishaa_param" "$elevation")
     read fajr sunrise dhuhr asr maghreb ishaa <<< "$raw"
     
     # Apply summer time adjustment if enabled
@@ -202,7 +215,7 @@ calculate_prayer_times() {
 
 # ==============================================================================
 # Formatted Output: print_prayer_times
-# Usage: print_prayer_times <lon> <lat> <timezone> <year> <month> <day> [method] [madhab]
+# Usage: print_prayer_times <lon> <lat> <timezone> <year> <month> <day> [method] [madhab] [summer_time] [elevation]
 # ==============================================================================
 print_prayer_times() {
     local raw=$(calculate_prayer_times "$@")
@@ -216,4 +229,24 @@ print_prayer_times() {
     echo "Ishaa:     $(format_time $ishaa)"
     echo "Midnight:  $(format_time $midnight)"
     echo "LastThird: $(format_time $last_third)"
+}
+
+# ==============================================================================
+# JSON Output: print_prayer_times_json
+# Usage: print_prayer_times_json <lon> <lat> <timezone> <year> <month> <day> [method] [madhab] [summer_time] [elevation]
+# ==============================================================================
+print_prayer_times_json() {
+    local raw=$(calculate_prayer_times "$@")
+    read fajr sunrise dhuhr asr maghreb ishaa midnight last_third <<< "$raw"
+    
+    printf '{\n'
+    printf '  "fajr": "%s",\n'      "$(format_time $fajr)"
+    printf '  "sunrise": "%s",\n'   "$(format_time $sunrise)"
+    printf '  "dhuhr": "%s",\n'     "$(format_time $dhuhr)"
+    printf '  "asr": "%s",\n'       "$(format_time $asr)"
+    printf '  "maghreb": "%s",\n'   "$(format_time $maghreb)"
+    printf '  "ishaa": "%s",\n'     "$(format_time $ishaa)"
+    printf '  "midnight": "%s",\n'  "$(format_time $midnight)"
+    printf '  "last_third": "%s"\n' "$(format_time $last_third)"
+    printf '}\n'
 }

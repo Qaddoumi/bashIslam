@@ -9,7 +9,7 @@ Actually, this is what the library can do:
 - [x] Hijri/Gregorian date conversion
 - [x] Qibla direction
 
-
+===========
 
 هي مكتبة إسلامية للغة البرمجة باش، توفر امكانية حساب **أوقات الصلاة**، **اتجاه القبلة**، **التقويم الهجري**.
 
@@ -21,3 +21,6 @@ Actually, this is what the library can do:
 
 # Original Project
 - [pyIslam](https://github.com/abougouffa/pyIslam)
+
+# References
+- [References](docs/References.md)

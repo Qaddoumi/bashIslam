@@ -309,15 +309,36 @@ print_prayer_times_json() {
     local raw=$(calculate_prayer_times "$@")
     read fajr sunrise dhuhr asr maghreb ishaa midnight last_third <<< "$raw"
     
+    local year=$4 month=$5 day=$6
+    local hijri_raw=$(gregorian_to_hijri_date "$year" "$month" "$day")
+    read h_year h_month h_day <<< "$hijri_raw"
+
+    local -a ar_months=("محرم" "صفر" "ربيع الأول" "ربيع الثاني" "جمادى الأولى" "جمادى الثانية" "رجب" "شعبان" "رمضان" "شوال" "ذو القعدة" "ذو الحجة")
+    local -a en_months=("Moharram" "Safar" "Rabie-I" "Rabie-II" "Jumada-I" "Jumada-II" "Rajab" "Shaban" "Ramadan" "Shawwal" "Delqada" "Delhijja")
+    
+    local m_ar=${ar_months[$((h_month-1))]}
+    local m_en=${en_months[$((h_month-1))]}
+
     printf '{\n'
-    printf '  "fajr": "%s",\n'      "$(format_time $fajr)"
-    printf '  "sunrise": "%s",\n'   "$(format_time $sunrise)"
-    printf '  "dhuhr": "%s",\n'     "$(format_time $dhuhr)"
-    printf '  "asr": "%s",\n'       "$(format_time $asr)"
-    printf '  "maghreb": "%s",\n'   "$(format_time $maghreb)"
-    printf '  "ishaa": "%s",\n'     "$(format_time $ishaa)"
-    printf '  "midnight": "%s",\n'  "$(format_time $midnight)"
-    printf '  "last_third": "%s"\n' "$(format_time $last_third)"
+    printf '  "prayers": {\n'
+    printf '    "fajr": "%s",\n'      "$(format_time $fajr)"
+    printf '    "sunrise": "%s",\n'   "$(format_time $sunrise)"
+    printf '    "dhuhr": "%s",\n'     "$(format_time $dhuhr)"
+    printf '    "asr": "%s",\n'       "$(format_time $asr)"
+    printf '    "maghreb": "%s",\n'   "$(format_time $maghreb)"
+    printf '    "ishaa": "%s",\n'     "$(format_time $ishaa)"
+    printf '    "midnight": "%s",\n'  "$(format_time $midnight)"
+    printf '    "last_third": "%s"\n' "$(format_time $last_third)"
+    printf '  },\n'
+    printf '  "hijri": {\n'
+    printf '    "day": %d,\n'          "$h_day"
+    printf '    "month": %d,\n'        "$h_month"
+    printf '    "month_name_ar": "%s",\n' "$m_ar"
+    printf '    "month_name_en": "%s",\n' "$m_en"
+    printf '    "year": %d,\n'         "$h_year"
+    printf '    "full_ar": "%d %s %d",\n' "$h_day" "$m_ar" "$h_year"
+    printf '    "full_en": "%d %s %d"\n'  "$h_day" "$m_en" "$h_year"
+    printf '  }\n'
     printf '}\n'
 }
 
@@ -347,6 +368,16 @@ if [[ -z "$LAT" || -z "$LON" ]]; then
     echo "Error: --lat and --lon are required."
     exit 1
 fi
+
+# Set defaults for date if not provided
+YEAR=${YEAR:-$(date +%Y)}
+MONTH=${MONTH:-$(date +%m)}
+DAY=${DAY:-$(date +%d)}
+TIMEZONE=${TIMEZONE:-0}
+METHOD=${METHOD:-2}
+MADHAB=${MADHAB:-1}
+SUMMER_TIME=${SUMMER_TIME:-0}
+ELEV=${ELEV:-0}
 
 # example : ./combined.sh --lat 31.986 --lon 35.898 --timezone 3 --year 2025 --month 12 --day 24 --method 20 --madhab 1 --summer-time 0 --elevation 950
 print_prayer_times_json $LON $LAT $TIMEZONE $YEAR $MONTH $DAY $METHOD $MADHAB $SUMMER_TIME $ELEV

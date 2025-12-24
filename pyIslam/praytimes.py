@@ -53,40 +53,65 @@ class MethodInfo:
 
 
 LIST_FAJR_ISHA_METHODS = (
-    MethodInfo(1, ("University of Islamic Sciences, Karachi (UISK)",
-                   "Ministry of Religious Affaires, Tunisia",
-                   "Grande Mosquée de Paris, France"),
+    MethodInfo(1, "University of Islamic Sciences, Karachi",
                18.0, 18.0, ()),
 
-    MethodInfo(2, ("Muslim World League (MWL)",
-                   "Ministry of Religious Affaires and Awqaf, Algeria",
-                   "Presidency of Religious Affairs, Turkey"),
+    MethodInfo(2, "Muslim World League (MWL)",
                18.0, 17.0, ()),
 
-    MethodInfo(3, "Egyptian General Authority of Survey (EGAS)",
+    MethodInfo(3, "Egyptian General Authority of Survey",
                19.5, 17.5, ()),
 
-    MethodInfo(4, "Umm al-Qura University, Makkah (UMU)",
+    MethodInfo(4, "Umm al-Qura University, Makkah",
                18.5, FixedTime(90, 120), ()),
 
-    MethodInfo(5, ("Islamic Society of North America (ISNA)",
-                   "France - Angle 15°"),
+    MethodInfo(5, "Islamic Society of North America (ISNA)",
                15.0, 15.0, ()),
 
-    MethodInfo(6, "French Muslims (ex-UOIF)",
+    MethodInfo(6, "France (UOIF)",
                12.0, 12.0, ()),
 
-    MethodInfo(7, ("Islamic Religious Council of Signapore (MUIS)",
-                   "Department of Islamic Advancements of Malaysia (JAKIM)",
-                   "Ministry of Religious Affairs of Indonesia (KEMENAG)"),
+    MethodInfo(7, "MUIS Singapore / JAKIM Malaysia / KEMENAG Indonesia",
                20.0, 18.0, ()),
 
-    MethodInfo(8, "Spiritual Administration of Muslims of Russia",
+    MethodInfo(8, "Russia (SAMR)",
                16.0, 15.0, ()),
 
     MethodInfo(9, "Fixed Ishaa Time Interval, 90min",
                19.5, FixedTime(90, 90), ()),
 
+    MethodInfo(10, "Institute of Geophysics, University of Tehran",
+               17.7, 14.0, ()),
+
+    MethodInfo(11, "Shia Ithna-Ashari (Jafari)",
+               16.0, 14.0, ()),
+
+    MethodInfo(12, "Kuwait",
+               18.0, 17.5, ()),
+
+    MethodInfo(13, "Qatar",
+               18.0, FixedTime(90, 90), ()),
+
+    MethodInfo(14, "Turkey (Diyanet)",
+               18.0, 17.0, ()),
+
+    MethodInfo(15, "Dubai",
+               18.2, 18.2, ()),
+
+    MethodInfo(16, "Tunisia",
+               18.0, 18.0, ()),
+
+    MethodInfo(17, "Algeria",
+               18.0, 17.0, ()),
+
+    MethodInfo(18, "Morocco",
+               19.0, 17.0, ()),
+
+    MethodInfo(19, "Portugal (Lisbon)",
+               18.0, FixedTime(77, 77), ()),
+
+    MethodInfo(20, "Jordan",
+               18.0, 18.0, ()),
 )
 
 

@@ -159,8 +159,12 @@ get_elevation() {
     local lat=$1
     local lon=$2
     # Returns elevation in meters
-    curl -s "https://api.open-meteo.com/v1/elevation?latitude=$lat&longitude=$lon" | \
-        sed 's/.*\[\([^]]*\)\].*/\1/' || echo "0"
+    elevation=$(curl -s "https://api.open-meteo.com/v1/elevation?latitude=$lat&longitude=$lon" | \
+        sed 's/.*\[\([^]]*\)\].*/\1/')
+    if [[ ! "$elevation" =~ ^-?[0-9]+(\.[0-9]+)?$ ]]; then
+        elevation=0
+    fi
+    echo "$elevation"
 }
 
 # ==============================================================================
@@ -179,15 +183,11 @@ calculate_prayer_times() {
     local method_id=${7:-2}
     local asr_madhab=${8:-1}
     local summer_time=${9:-0}
-    local elevation=${10:-0}  # elevation parameter (meters)
+    local elevation=${10:-0}  # elevation (meters)
 
     # If elevation is not a number or is 0, try to fetch it
     if (( elevation == 0 )); then
         elevation=$(get_elevation "$lat" "$lon")
-        # Final safety check: if API returned an error string instead of a number
-        if [[ ! "$elevation" =~ ^-?[0-9]+(\.[0-9]+)?$ ]]; then
-            elevation=0
-        fi
     fi
 
     # Get method parameters (like Python's LIST_FAJR_ISHA_METHODS lookup)

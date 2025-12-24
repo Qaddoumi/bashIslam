@@ -18,12 +18,12 @@ FAIL_COUNT=0
 
 # Helper: Get Python prayer times
 get_python_prayer() {
-    local lat=$1 lon=$2 tz=$3 year=$4 month=$5 day=$6 method=${7:-2} madhab=${8:-1}
+    local lat=$1 lon=$2 timezone=$3 year=$4 month=$5 day=$6 method=${7:-2} madhab=${8:-1}
     export PYTHONPATH=$PYTHONPATH:.
     python3 -c "
 from praytimes import Prayer, PrayerConf
 from datetime import datetime
-conf = PrayerConf($lon, $lat, $tz, angle_ref=$method, asr_madhab=$madhab)
+conf = PrayerConf($lon, $lat, $timezone, angle_ref=$method, asr_madhab=$madhab)
 p = Prayer(conf, datetime($year, $month, $day))
 print(f'{p._fajr_time} {p._sherook_time} {p._dohr_time} {p._asr_time} {p._maghreb_time} {p._ishaa_time} {p._midnight} {p._last_third_of_night}')
 " 2>/dev/null
@@ -31,9 +31,9 @@ print(f'{p._fajr_time} {p._sherook_time} {p._dohr_time} {p._asr_time} {p._maghre
 
 # Helper: Get Bash prayer times
 get_bash_prayer() {
-    local lat=$1 lon=$2 tz=$3 year=$4 month=$5 day=$6 fajr_angle=${7:-18.0} ishaa_angle=${8:-17.0} madhab=${9:-1}
+    local lat=$1 lon=$2 timezone=$3 year=$4 month=$5 day=$6 fajr_angle=${7:-18.0} ishaa_angle=${8:-17.0} madhab=${9:-1}
     local jd=$(gregorian_to_julian $year $month $day 12 0 0)
-    local raw=$(get_prayer_times $lat $lon $tz $jd $madhab $fajr_angle $ishaa_angle)
+    local raw=$(get_prayer_times $lat $lon $timezone $jd $madhab $fajr_angle $ishaa_angle)
     read -r f s d a m i <<< "$raw"
     local night=$(get_night_times "$f" "$m")
     read -r mid lt <<< "$night"
@@ -77,17 +77,17 @@ compare() {
 }
 
 run_test() {
-    local name=$1 lat=$2 lon=$3 tz=$4 year=$5 month=$6 day=$7 method=${8:-2} madhab=${9:-1}
+    local name=$1 lat=$2 lon=$3 timezone=$4 year=$5 month=$6 day=$7 method=${8:-2} madhab=${9:-1}
     
     echo -e "\n${YELLOW}Test: $name${NC}"
-    echo "  Location: Lat=$lat, Lon=$lon, TZ=$tz"
+    echo "  Location: Lat=$lat, Lon=$lon, TimeZone=$timezone"
     echo "  Date: $year-$month-$day, Method=$method, Madhab=$madhab"
     
     # Get method angles
     read fajr_a ishaa_a <<< $(get_method_angles $method)
     
     # Get Python results
-    local py_raw=$(get_python_prayer $lat $lon $tz $year $month $day $method $madhab)
+    local py_raw=$(get_python_prayer $lat $lon $timezone $year $month $day $method $madhab)
     if [ -z "$py_raw" ]; then
         echo -e "  ${RED}[ERROR]${NC} Python execution failed"
         return
@@ -95,7 +95,7 @@ run_test() {
     read -r py_f py_s py_d py_a py_m py_i py_mid py_lt <<< "$py_raw"
     
     # Get Bash results
-    local ba_raw=$(get_bash_prayer $lat $lon $tz $year $month $day $fajr_a $ishaa_a $madhab)
+    local ba_raw=$(get_bash_prayer $lat $lon $timezone $year $month $day $fajr_a $ishaa_a $madhab)
     read -r ba_f ba_s ba_d ba_a ba_m ba_i ba_mid ba_lt <<< "$ba_raw"
     
     # Compare each prayer time

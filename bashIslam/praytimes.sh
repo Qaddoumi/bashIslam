@@ -269,3 +269,60 @@ print_prayer_times_json() {
     printf '  "last_third": "%s"\n' "$(format_time $last_third)"
     printf '}\n'
 }
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --lat)
+            shift
+            LAT="$1"
+            ;;
+        --lon)
+            shift
+            LON="$1"
+            ;;
+        --timezone)
+            shift
+            TIMEZONE="$1"
+            ;;
+        --year)
+            shift
+            YEAR="$1"
+            ;;
+        --month)
+            shift
+            MONTH="$1"
+            ;;
+        --day)
+            shift
+            DAY="$1"
+            ;;
+        --method)
+            shift
+            METHOD="$1"
+            ;;
+        --madhab)
+            shift
+            MADHAB="$1"
+            ;;
+        --summer-time)
+            shift
+            SUMMER_TIME="$1"
+            ;;
+        --elevation)
+            shift
+            ELEV="$1"
+            ;;
+        -h|--help)
+            echo -e "Usage: $0 --lat <latitude> --lon <longitude> --timezone <timezone> --year <year> --month <month> --day <day> --method <method> --madhab <madhab> --summer-time <summer_time> --elevation <elevation>\n \
+optional arguments: <method> <madhab> <summer_time> <elevation>"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+    shift
+done
+
+print_prayer_times_json $LON $LAT $TIMEZONE $YEAR $MONTH $DAY $METHOD $MADHAB $SUMMER_TIME $ELEV

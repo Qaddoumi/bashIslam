@@ -374,6 +374,7 @@ calculate_prayer_times() {
 }
 
 print_prayer_times_json() {
+    local lon=$1 lat=$2
     local raw=$(calculate_prayer_times "$@")
     read fajr sunrise dhuhr asr maghreb ishaa midnight last_third <<< "$raw"
     

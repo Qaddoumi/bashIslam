@@ -14,14 +14,17 @@ compare() {
     if [[ "$py_out" =~ ^[0-9.]+$ ]] && [[ "$bash_out" =~ ^[0-9.]+$ ]]; then
         diff=$(awk -v a="$py_out" -v b="$bash_out" 'BEGIN { d=a-b; if(d<0) d=-d; print (d<0.01) ? 1 : 0 }')
         if [[ "$diff" == "1" ]]; then
+             echo -e "Result: $py_out vs $bash_out"
              echo -e "[\033[32mPASS\033[0m] $test_name"
              return
         fi
     fi
 
     if [[ "$py_out" == "$bash_out" ]]; then
+        echo -e "Result: $py_out vs $bash_out"
         echo -e "[\033[32mPASS\033[0m] $test_name"
     else
+        echo -e "Result: $py_out vs $bash_out"
         echo -e "[\033[31mFAIL\033[0m] $test_name | Py: [$py_out] | Bash: [$bash_out]"
     fi
 }

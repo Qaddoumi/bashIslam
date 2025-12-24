@@ -12,6 +12,7 @@
 - [References](docs/References.md)
 
 # Example
+for Amman, Jordan
 ```bash
 ./bashIslam/combined.sh --lat 31.986 --lon 35.898 --timezone 3 --year 2025 --month 12 --day 24 --method 20 --madhab 1 --summer-time 0 --elevation 950
 ```

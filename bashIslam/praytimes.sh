@@ -153,6 +153,16 @@ format_time() {
     }'
 }
 
+# Helper: Fetch elevation from Open-Meteo API
+# Usage: get_elevation <latitude> <longitude>
+get_elevation() {
+    local lat=$1
+    local lon=$2
+    # Returns elevation in meters
+    curl -s "https://api.open-meteo.com/v1/elevation?latitude=$lat&longitude=$lon" | \
+        sed 's/.*\[\([^]]*\)\].*/\1/' || echo "0"
+}
+
 # ==============================================================================
 # High-Level API: calculate_prayer_times
 # This is the main entry point, matching Python's PrayerConf + Prayer usage
@@ -170,7 +180,16 @@ calculate_prayer_times() {
     local asr_madhab=${8:-1}
     local summer_time=${9:-0}
     local elevation=${10:-0}  # elevation parameter (meters)
-    
+
+    # If elevation is not a number or is 0, try to fetch it
+    if (( elevation == 0 )); then
+        elevation=$(get_elevation "$lat" "$lon")
+        # Final safety check: if API returned an error string instead of a number
+        if [[ ! "$elevation" =~ ^-?[0-9]+(\.[0-9]+)?$ ]]; then
+            elevation=0
+        fi
+    fi
+
     # Get method parameters (like Python's LIST_FAJR_ISHA_METHODS lookup)
     local params=$(get_method_params "$method_id")
     read fajr_angle ishaa_type ishaa_v1 ishaa_v2 <<< "$params"

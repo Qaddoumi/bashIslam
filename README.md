@@ -3,7 +3,7 @@
 
 **_bashIslam_** is a bash islamic library, forked from [pyIslam](https://github.com/abougouffa/pyIslam), it can calculates **prayer times**, **qibla** direction, convert between gregorian and **hijri**.
 
-هي مكتبة إسلامية للغة البرمجة باش، توفر امكانية حساب **أوقات الصلاة**، **اتجاه القبلة**، **التقويم الهجري**.
+هي مكتبة إسلامية للغة البرمجة باش، متفرعة من [pyIslam](https://github.com/abougouffa/pyIslam) ، توفر امكانية حساب **أوقات الصلاة**، **اتجاه القبلة**، **التقويم الهجري**.
 
 # Original Project
 - [pyIslam](https://github.com/abougouffa/pyIslam)

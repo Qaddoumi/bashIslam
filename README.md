@@ -39,8 +39,8 @@ outputs:
     "is_last_day": "false"
   },
   "qiblah": {
-    "direction": "58.508206326330004",
-    "direction_dms": "58° 30' 29''"
+    "direction": "160.70586844659732",
+    "direction_dms": "160° 42' 21''"
   }
 }
 ```

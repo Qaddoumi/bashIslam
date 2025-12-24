@@ -140,3 +140,80 @@ format_time() {
         printf "%02d:%02d:00\n", h, m
     }'
 }
+
+# ==============================================================================
+# High-Level API: calculate_prayer_times
+# This is the main entry point, matching Python's PrayerConf + Prayer usage
+# Usage: calculate_prayer_times <lon> <lat> <tz> <year> <month> <day> [method] [madhab] [summer_time]
+# Returns: Fajr Sunrise Dhuhr Asr Maghreb Ishaa Midnight LastThird (as decimal hours)
+# ==============================================================================
+calculate_prayer_times() {
+    local lon=$1
+    local lat=$2
+    local tz=$3
+    local year=$4
+    local month=$5
+    local day=$6
+    local method_id=${7:-2}
+    local asr_madhab=${8:-1}
+    local summer_time=${9:-0}
+    
+    # Get method parameters (like Python's LIST_FAJR_ISHA_METHODS lookup)
+    local params=$(get_method_params "$method_id")
+    read fajr_angle ishaa_type ishaa_v1 ishaa_v2 <<< "$params"
+    
+    # Handle fixed Ishaa time (check for Ramadan if type=1)
+    local ishaa_param="$ishaa_v1"
+    if (( ishaa_type == 1 )); then
+        # Check if current month is Ramadan
+        local hijri=$(gregorian_to_hijri_date "$year" "$month" "$day")
+        read h_year h_month h_day <<< "$hijri"
+        if (( h_month == 9 )); then
+            ishaa_param="FIXED:$ishaa_v2"  # Ramadan minutes
+        else
+            ishaa_param="FIXED:$ishaa_v1"  # All-year minutes
+        fi
+    fi
+    
+    # Calculate Julian Day
+    local jd=$(gregorian_to_julian "$year" "$month" "$day" 12 0 0)
+    
+    # Get prayer times
+    local raw=$(get_prayer_times "$lat" "$lon" "$tz" "$jd" "$asr_madhab" "$fajr_angle" "$ishaa_param")
+    read fajr sunrise dhuhr asr maghreb ishaa <<< "$raw"
+    
+    # Apply summer time adjustment if enabled
+    if (( summer_time == 1 )); then
+        fajr=$(awk -v t="$fajr" 'BEGIN { print t + 1 }')
+        sunrise=$(awk -v t="$sunrise" 'BEGIN { print t + 1 }')
+        dhuhr=$(awk -v t="$dhuhr" 'BEGIN { print t + 1 }')
+        asr=$(awk -v t="$asr" 'BEGIN { print t + 1 }')
+        maghreb=$(awk -v t="$maghreb" 'BEGIN { print t + 1 }')
+        ishaa=$(awk -v t="$ishaa" 'BEGIN { print t + 1 }')
+    fi
+    
+    # Get night times
+    local night=$(get_night_times "$fajr" "$maghreb")
+    read midnight last_third <<< "$night"
+    
+    # Output all times
+    echo "$fajr $sunrise $dhuhr $asr $maghreb $ishaa $midnight $last_third"
+}
+
+# ==============================================================================
+# Formatted Output: print_prayer_times
+# Usage: print_prayer_times <lon> <lat> <tz> <year> <month> <day> [method] [madhab]
+# ==============================================================================
+print_prayer_times() {
+    local raw=$(calculate_prayer_times "$@")
+    read fajr sunrise dhuhr asr maghreb ishaa midnight last_third <<< "$raw"
+    
+    echo "Fajr:      $(format_time $fajr)"
+    echo "Sunrise:   $(format_time $sunrise)"
+    echo "Dhuhr:     $(format_time $dhuhr)"
+    echo "Asr:       $(format_time $asr)"
+    echo "Maghreb:   $(format_time $maghreb)"
+    echo "Ishaa:     $(format_time $ishaa)"
+    echo "Midnight:  $(format_time $midnight)"
+    echo "LastThird: $(format_time $last_third)"
+}

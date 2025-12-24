@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from pyIslam.baselib import dcos, dsin
+from baselib import dcos, dsin
 from math import atan, pi
 
 

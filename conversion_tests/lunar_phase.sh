@@ -7,7 +7,7 @@
 # ==============================================================================
 
 # AWK library with math functions
-AWK_LUNAR_LIB='
+AWK_LIB='
 BEGIN {
     PI = 3.141592653589793
     RR = 180 / PI  # degrees in a radian
@@ -58,7 +58,7 @@ tjd_now() {
     minutes=$((minutes + 1))
     
     awk -v year="$year" -v month="$month" -v day="$day" \
-        -v hours="$hours" -v minutes="$minutes" -v seconds="$seconds" "$AWK_LUNAR_LIB"'
+        -v hours="$hours" -v minutes="$minutes" -v seconds="$seconds" "$AWK_LIB"'
     BEGIN {
         OFMT = "%.17g"
     }
@@ -95,7 +95,7 @@ tjd_from_date() {
     local seconds=${6:-0}
     
     awk -v year="$year" -v month="$month" -v day="$day" \
-        -v hours="$hours" -v minutes="$minutes" -v seconds="$seconds" "$AWK_LUNAR_LIB"'
+        -v hours="$hours" -v minutes="$minutes" -v seconds="$seconds" "$AWK_LIB"'
     BEGIN {
         OFMT = "%.17g"
     }
@@ -126,7 +126,7 @@ tjd_from_date() {
 moonpos() {
     local tjd=$1
     
-    awk -v tjd="$tjd" "$AWK_LUNAR_LIB"'
+    awk -v tjd="$tjd" "$AWK_LIB"'
     BEGIN {
         OFMT = "%.17g"
     }
@@ -192,7 +192,7 @@ lunarphase() {
     local rsun=$(echo "$lunpos" | awk '{print $5}')
     
     awk -v lmoon="$lmoon" -v bmoon="$bmoon" -v rmoon="$rmoon" \
-        -v lsun="$lsun" -v rsun="$rsun" "$AWK_LUNAR_LIB"'
+        -v lsun="$lsun" -v rsun="$rsun" "$AWK_LIB"'
     BEGIN {
         OFMT = "%.17g"
     }
@@ -247,7 +247,7 @@ moon_flum() {
     local phase_info=$(lunarphase "$tjd")
     local phase=$(echo "$phase_info" | awk '{print $2}')
     
-    awk -v phase="$phase" "$AWK_LUNAR_LIB"'
+    awk -v phase="$phase" "$AWK_LIB"'
     BEGIN {
         OFMT = "%.17g"
     }

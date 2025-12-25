@@ -24,7 +24,7 @@ FAIL_COUNT=0
 gmod() {
     local n=$1
     local m=$2
-    awk -v n="$n" -v m="$m" "$AWK_LUNAR_LIB"'
+    awk -v n="$n" -v m="$m" "$AWK_LIB"'
     {
         print gmod(n, m)
     }' <<< "run"
@@ -36,7 +36,7 @@ gmod() {
 # ------------------------------------------------------------------------------
 cosd() {
     local x=$1
-    awk -v x="$x" "$AWK_LUNAR_LIB"'
+    awk -v x="$x" "$AWK_LIB"'
     {
         print cosd(x)
     }' <<< "run"
@@ -48,7 +48,7 @@ cosd() {
 # ------------------------------------------------------------------------------
 sind() {
     local x=$1
-    awk -v x="$x" "$AWK_LUNAR_LIB"'
+    awk -v x="$x" "$AWK_LIB"'
     {
         print sind(x)
     }' <<< "run"
@@ -60,7 +60,7 @@ sind() {
 # ------------------------------------------------------------------------------
 acosd() {
     local x=$1
-    awk -v x="$x" "$AWK_LUNAR_LIB"'
+    awk -v x="$x" "$AWK_LIB"'
     {
         print acosd(x)
     }' <<< "run"

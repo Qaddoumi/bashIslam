@@ -19,7 +19,7 @@ function floor(x) {
 }
 '
 
-CalculateDate() {
+get_islamic_calendars_json() {
     local year=$1
     local month=$2
     local day=$3
@@ -135,18 +135,18 @@ CalculateDate() {
     }' <<< "run"
 }
 
-calculate_all_dates() {
+get_all_islamic_calendars_json() {
     local year=$1
     local month=$2
     local day=$3
 
     local results=()
-    results+=("$(CalculateDate "$year" "$month" "$day" "ummalqura_dat")")
-    results+=("$(CalculateDate "$year" "$month" "$day" "arabian_dat")")
-    results+=("$(CalculateDate "$year" "$month" "$day" "diyanet_dat")")
-    results+=("$(CalculateDate "$year" "$month" "$day" "mabims_id_dat")")
-    results+=("$(CalculateDate "$year" "$month" "$day" "mabims_my_dat")")
-    results+=("$(CalculateDate "$year" "$month" "$day" "mabims_si_dat")")
+    results+=("$(get_islamic_calendars_json "$year" "$month" "$day" "ummalqura_dat")")
+    results+=("$(get_islamic_calendars_json "$year" "$month" "$day" "arabian_dat")")
+    results+=("$(get_islamic_calendars_json "$year" "$month" "$day" "diyanet_dat")")
+    results+=("$(get_islamic_calendars_json "$year" "$month" "$day" "mabims_id_dat")")
+    results+=("$(get_islamic_calendars_json "$year" "$month" "$day" "mabims_my_dat")")
+    results+=("$(get_islamic_calendars_json "$year" "$month" "$day" "mabims_si_dat")")
 
     # Final aggregation into a JSON array
     echo "["

@@ -1,5 +1,5 @@
 import math
-from .ummalqura_table import *
+from ummalqura_table import *
 
 # Ported form https://webspace.science.uu.nl/~gent0113/islam/addfiles/ummalqura_calendar.js
 

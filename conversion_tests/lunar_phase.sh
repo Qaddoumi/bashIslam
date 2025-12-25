@@ -40,47 +40,6 @@ function sqrt_val(x) {
 '
 
 # ------------------------------------------------------------------------------
-# tjd ==> Total/True Julian Day
-# tjd_now: Computes the current Julian Day Number
-# Usage: tjd_now
-# Returns: Julian Day Number as a floating point
-# ------------------------------------------------------------------------------
-tjd_now() {
-    local year=$(date -u +%Y)
-    local month=$(date -u +%-m)  # No leading zero
-    local day=$(date -u +%-d)    # No leading zero
-    local hours=$(date -u +%-H)  # No leading zero
-    local minutes=$(date -u +%-M) # No leading zero
-    local seconds=$(date -u +%-S) # No leading zero
-    
-    # Add 1 minute for approximate correction to TAI (as in JS)
-    minutes=$((minutes + 1))
-    
-    awk -v year="$year" -v month="$month" -v day="$day" \
-        -v hours="$hours" -v minutes="$minutes" -v seconds="$seconds" "$AWK_LIB"'
-    BEGIN {
-        OFMT = "%.17g"
-    }
-    {
-        m = month
-        y = year
-        
-        if (m < 3) {
-            y = y - 1
-            m = m + 12
-        }
-        
-        c = int(y / 100)
-        jgc = c - int(c / 4) - 2
-        
-        cjdn = int(365.25 * (y + 4716)) + int(30.6001 * (m + 1)) + day - jgc - 1524
-        
-        tjd = cjdn + ((hours - 12) + (minutes + seconds / 60) / 60) / 24
-        print tjd
-    }' <<< "run"
-}
-
-# ------------------------------------------------------------------------------
 # tjd_from_date: Computes Julian Day Number from specific date/time
 # Usage: tjd_from_date <year> <month> <day> <hours> <minutes> <seconds>
 # Returns: Julian Day Number as a floating point
@@ -314,7 +273,7 @@ get_moon_phase_emoji() {
     }'
 }
 
-get_all_moon_data(){
+get_all_moon_data_json(){
     local year=$1
     local month=$2
     local day=$3
@@ -322,26 +281,43 @@ get_all_moon_data(){
     local minutes=$5
     local seconds=$6
     
-    tjd=$(tjd_from_date "$year" "$month" "$day" "$hours" "$minutes" "$seconds")
-    echo "Current Julian Day: $tjd"
-    echo ""
+    local tjd=$(tjd_from_date "$year" "$month" "$day" "$hours" "$minutes" "$seconds")
     
-    echo "Moon Position:"
-    moonpos "$tjd"
-    echo ""
+    # Moon Position
+    local lunpos=$(moonpos "$tjd")
+    read lmoon bmoon rmoon lsun rsun <<< "$lunpos"
     
-    echo "Lunar Phase (elongation, phase angle):"
-    phase_info=$(lunarphase "$tjd")
-    echo "$phase_info"
-    echo ""
+    # Phase Info
+    local phase_info=$(lunarphase "$tjd")
+    read elone phase_angle <<< "$phase_info"
     
-    elone=$(echo "$phase_info" | awk '{print $1}')
-    echo "Illuminated Fraction:"
-    illum=$(moon_flum "$tjd")
-    echo "$illum"
-    echo ""
+    local illum=$(moon_flum "$tjd")
+    local phase_name=$(get_moon_phase_name "$illum")
+    local phase_emoji=$(get_moon_phase_emoji "$elone")
     
-    echo "Moon Phase Emoji: $(get_moon_phase_emoji "$elone")"
+    # Build JSON
+    local json="["
+    json+=$'\n    {\n'
+    json+='      "julian_day": '"$tjd"',\n'
+    json+='      "moon_position": {\n'
+    json+='        "longitude": '"$lmoon"',\n'
+    json+='        "latitude": '"$bmoon"',\n'
+    json+='        "distance_au": '"$rmoon"'\n'
+    json+='      },\n'
+    json+='      "sun_position": {\n'
+    json+='        "longitude": '"$lsun"',\n'
+    json+='        "distance_au": '"$rsun"'\n'
+    json+='      },\n'
+    json+='      "phase": {\n'
+    json+='        "elongation": '"$elone"',\n'
+    json+='        "angle": '"$phase_angle"',\n'
+    json+='        "illumination": '"$illum"',\n'
+    json+='        "name": "'"$phase_name"'",\n'
+    json+='        "emoji": "'"$phase_emoji"'"\n'
+    json+='      }\n'
+    json+='    }\n'
+    json+='  ]'
+    echo -e "$json"
 }
 
 while [[ $# -gt 0 ]]; do
@@ -364,9 +340,5 @@ done
 [[ -z $SECONDS ]] && SECONDS=$(date +%S)
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    echo "=== Lunar Phase Calculator (Bash) ==="
-    echo ""
-    
-    get_all_moon_data "$YEAR" "$MONTH" "$DAY" "$HOURS" "$MINUTES" "$SECONDS"
-    echo ""
+    get_all_moon_data_json "$YEAR" "$MONTH" "$DAY" "$HOURS" "$MINUTES" "$SECONDS"
 fi

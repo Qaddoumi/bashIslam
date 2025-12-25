@@ -31,6 +31,7 @@ CalculateDate() {
     
     awk -v y="$year" -v m="$month" -v d="$day" \
         -v table_str="$table_str" -v table_len="$table_len" \
+        -v table_name="$4" \
         "$AWK_LIB"'
     BEGIN {
         # Parse the table into an array (1-indexed for convenience, matching Python 0-indexed)
@@ -75,11 +76,6 @@ CalculateDate() {
         # Compute weekday (1=Sunday, 7=Saturday)
         wd = ((cjdn + 1) % 7) + 1
         
-        # Output Gregorian date and weekday
-        print "GREG_DATE:", out_year, out_month, int(out_day)
-        print "WEEK_DAY:", wd
-        print "JULIAN_DAY:", cjdn
-        
         # Compute Modified Chronological Julian Day Number (MCJDN)
         mcjdn = cjdn - 2400000
         
@@ -98,14 +94,10 @@ CalculateDate() {
         iy = ii + 1
         im = iln - 12 * ii
         
-        # Handle index for id/ml (Python i matches Bash 0..N-1, or 1..N in table)
-        # Python uses UMMALQURA_TABLE[i-1]. If i=1, it is index 0. Bash table[1].
-        # If i=0, it is index -1. Bash table[table_len].
+        # Handle index for id/ml
         t1 = (i == 0 ? table_len : i)
         id = mcjdn - table[t1] + 1
         ml = table[i + 1] - table[t1]
-        
-        print "HIJRI_DATE:", iy, im, int(id)
         
         # Compute solar Hijri date
         epoch = 450947 + jgc
@@ -128,10 +120,18 @@ CalculateDate() {
             sd = 30
             sm = 5
         }
-        
-        print "SOLAR_HIJRI_DATE:", (sy + 2), sm, int(sd)
-        print "ISLAMIC_LUNATION_NUM:", iln
-        print "ISLAMIC_MONTH_LENGTH:", ml
+
+        # Build JSON string manually
+        printf "{\n"
+        printf "  \"calendar\": \"%s\",\n", table_name
+        printf "  \"gregorian_date\": \"%04d-%02d-%02d\",\n", out_year, out_month, int(out_day)
+        printf "  \"weekday\": %d,\n", wd
+        printf "  \"julian_day\": %d,\n", cjdn
+        printf "  \"hijri_date\": \"%d-%d-%d\",\n", iy, im, int(id)
+        printf "  \"solar_hijri_date\": \"%d-%d-%d\",\n", (sy + 2), sm, int(sd)
+        printf "  \"islamic_lunation_num\": %d,\n", iln
+        printf "  \"islamic_month_length\": %d\n", ml
+        printf "}"
     }' <<< "run"
 }
 
@@ -140,10 +140,21 @@ calculate_all_dates() {
     local month=$2
     local day=$3
 
-    CalculateDate "$year" "$month" "$day" "ummalqura_dat"
-    CalculateDate "$year" "$month" "$day" "arabian_dat"
-    CalculateDate "$year" "$month" "$day" "diyanet_dat"
-    CalculateDate "$year" "$month" "$day" "mabims_id_dat"
-    CalculateDate "$year" "$month" "$day" "mabims_my_dat"
-    CalculateDate "$year" "$month" "$day" "mabims_si_dat"
+    local results=()
+    results+=("$(CalculateDate "$year" "$month" "$day" "ummalqura_dat")")
+    results+=("$(CalculateDate "$year" "$month" "$day" "arabian_dat")")
+    results+=("$(CalculateDate "$year" "$month" "$day" "diyanet_dat")")
+    results+=("$(CalculateDate "$year" "$month" "$day" "mabims_id_dat")")
+    results+=("$(CalculateDate "$year" "$month" "$day" "mabims_my_dat")")
+    results+=("$(CalculateDate "$year" "$month" "$day" "mabims_si_dat")")
+
+    # Final aggregation into a JSON array
+    echo "["
+    for i in "${!results[@]}"; do
+        echo "${results[$i]}" | sed 's/^/  /'
+        if [[ $i -lt $((${#results[@]} - 1)) ]]; then
+            echo ","
+        fi
+    done
+    echo "]"
 }

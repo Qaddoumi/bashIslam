@@ -5,7 +5,7 @@
 # ==============================================================================
 
 # Load the table data
-source "./islamcalendar_dat.sh"
+source "./islamcalendar_tables.sh"
 
 # We define the math logic in an AWK variable to reuse it across functions.
 AWK_LIB='

@@ -5,7 +5,7 @@
 # ==============================================================================
 
 # Load the table data
-source "$(dirname "$0")/islamcalendar_dat.sh"
+source "./islamcalendar_dat.sh"
 
 # We define the math logic in an AWK variable to reuse it across functions.
 AWK_LIB='
@@ -37,7 +37,7 @@ CalculateDate() {
     local year=$1
     local month=$2
     local day=$3
-    local table=$4
+    local -n table=$4
     
     # Pass table as a string joined by spaces for awk to parse
     local table_str="${table[*]}"

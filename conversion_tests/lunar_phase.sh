@@ -1,9 +1,8 @@
 #!/bin/bash
 
 # ==============================================================================
-# LUNAR_PHASE.SH - Bash port of lunar_phase.js
+# LUNAR_PHASE.SH - Bash port of https://webspace.science.uu.nl/~gent0113/islam/addfiles/lunar_phase.js
 # Computes the lunar position, phase, and illuminated fraction of the Moon.
-# Uses awk to replicate JavaScript's float arithmetic and trigonometric functions.
 # ==============================================================================
 
 # AWK library with math functions

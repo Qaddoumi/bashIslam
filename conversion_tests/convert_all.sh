@@ -19,20 +19,6 @@ function floor(x) {
 }
 '
 
-# ------------------------------------------------------------------------------
-# UmmAlQuraCalendar - Main conversion function
-# Python equivalent: UmmAlQuraCalendar class __init__
-#
-# Usage: UmmAlQura year month day
-# Outputs (one per line):
-#   GREG_DATE: year month day
-#   WEEK_DAY: weekday (1=Sunday, 7=Saturday)
-#   JULIAN_DAY: cjdn
-#   HIJRI_DATE: year month day
-#   SOLAR_HIJRI_DATE: year month day
-#   ISLAMIC_LUNATION_NUM: lunation number
-#   ISLAMIC_MONTH_LENGTH: month length
-# ------------------------------------------------------------------------------
 CalculateDate() {
     local year=$1
     local month=$2
@@ -149,41 +135,15 @@ CalculateDate() {
     }' <<< "run"
 }
 
-# ------------------------------------------------------------------------------
-# Helper functions to extract specific values
-# ------------------------------------------------------------------------------
+calculate_all_dates() {
+    local year=$1
+    local month=$2
+    local day=$3
 
-# Get Gregorian date from CalculateDate output
-get_greg_date() {
-    CalculateDate "$1" "$2" "$3" "$4" | grep "^GREG_DATE:" | awk '{print $2, $3, $4}'
-}
-
-# Get weekday from CalculateDate output
-get_week_day() {
-    CalculateDate "$1" "$2" "$3" "$4" | grep "^WEEK_DAY:" | awk '{print $2}'
-}
-
-# Get Julian day from CalculateDate output
-get_julian_day() {
-    CalculateDate "$1" "$2" "$3" "$4" | grep "^JULIAN_DAY:" | awk '{print $2}'
-}
-
-# Get Hijri date from CalculateDate output
-get_hijri_date() {
-    CalculateDate "$1" "$2" "$3" "$4" | grep "^HIJRI_DATE:" | awk '{print $2, $3, $4}'
-}
-
-# Get solar Hijri date from CalculateDate output
-get_solar_hijri_date() {
-    CalculateDate "$1" "$2" "$3" "$4" | grep "^SOLAR_HIJRI_DATE:" | awk '{print $2, $3, $4}'
-}
-
-# Get Islamic lunation number from CalculateDate output
-get_islamic_lunation_num() {
-    CalculateDate "$1" "$2" "$3" "$4" | grep "^ISLAMIC_LUNATION_NUM:" | awk '{print $2}'
-}
-
-# Get Islamic month length from CalculateDate output
-get_islamic_month_length() {
-    CalculateDate "$1" "$2" "$3" "$4" | grep "^ISLAMIC_MONTH_LENGTH:" | awk '{print $2}'
+    CalculateDate "$year" "$month" "$day" "ummalqura_dat"
+    CalculateDate "$year" "$month" "$day" "arabian_dat"
+    CalculateDate "$year" "$month" "$day" "diyanet_dat"
+    CalculateDate "$year" "$month" "$day" "mabims_id_dat"
+    CalculateDate "$year" "$month" "$day" "mabims_my_dat"
+    CalculateDate "$year" "$month" "$day" "mabims_si_dat"
 }

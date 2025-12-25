@@ -346,27 +346,27 @@ get_all_moon_data(){
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --year) year=$2; shift 2;;
-        --month) month=$2; shift 2;;
-        --day) day=$2; shift 2;;
-        --hours) hours=$2; shift 2;;
-        --minutes) minutes=$2; shift 2;;
-        --seconds) seconds=$2; shift 2;;
+        --year) YEAR=$2; shift 2;;
+        --month) MONTH=$2; shift 2;;
+        --day) DAY=$2; shift 2;;
+        --hours) HOURS=$2; shift 2;;
+        --minutes) MINUTES=$2; shift 2;;
+        --seconds) SECONDS=$2; shift 2;;
         *) echo "Unknown parameter passed: $1"; exit 1;;
     esac
 done
 
-[[ -z $year ]]    && year=$(date +%Y)
-[[ -z $month ]]   && month=$(date +%m)
-[[ -z $day ]]     && day=$(date +%d)
-[[ -z $hours ]]   && hours=$(date +%H)
-[[ -z $minutes ]] && minutes=$(date +%M)
-[[ -z $seconds ]] && seconds=$(date +%S)
+[[ -z $YEAR ]]    && YEAR=$(date +%Y)
+[[ -z $MONTH ]]   && MONTH=$(date +%m)
+[[ -z $DAY ]]     && DAY=$(date +%d)
+[[ -z $HOURS ]]   && HOURS=$(date +%H)
+[[ -z $MINUTES ]] && MINUTES=$(date +%M)
+[[ -z $SECONDS ]] && SECONDS=$(date +%S)
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     echo "=== Lunar Phase Calculator (Bash) ==="
     echo ""
     
-    get_all_moon_data "$year" "$month" "$day" "$hours" "$minutes" "$seconds"
+    get_all_moon_data "$YEAR" "$MONTH" "$DAY" "$HOURS" "$MINUTES" "$SECONDS"
     echo ""
 fi

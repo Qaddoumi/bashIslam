@@ -1048,6 +1048,9 @@ while [[ $# -gt 0 ]]; do
         --year) shift; YEAR="$1" ;;
         --month) shift; MONTH="$1" ;;
         --day) shift; DAY="$1" ;;
+        --hours) shift; HOURS="$1" ;;
+        --minutes) shift; MINUTES="$1" ;;
+        --seconds) shift; SECONDS="$1" ;;
         --method) shift; METHOD="$1" ;;
         --madhab) shift; MADHAB="$1" ;;
         --summer-time) shift; SUMMER_TIME="$1" ;;
@@ -1067,6 +1070,9 @@ fi
 YEAR=${YEAR:-$(date +%Y)}
 MONTH=${MONTH:-$(date +%m)}
 DAY=${DAY:-$(date +%d)}
+HOURS=${HOURS:-$(date +%H)}
+MINUTES=${MINUTES:-$(date +%M)}
+SECONDS=${SECONDS:-$(date +%S)}
 TIMEZONE=${TIMEZONE:-0}
 METHOD=${METHOD:-2}
 MADHAB=${MADHAB:-1}

@@ -225,16 +225,6 @@ lunarphase() {
 }
 
 # ------------------------------------------------------------------------------
-# moon_flum_now: Computes the illuminated fraction of the lunar disk (current)
-# Usage: moon_flum_now
-# Returns: Illuminated fraction as decimal (e.g., "0.523")
-# ------------------------------------------------------------------------------
-moon_flum_now() {
-    local tjd=$(tjd_now)
-    moon_flum "$tjd"
-}
-
-# ------------------------------------------------------------------------------
 # moon_flum: Computes the illuminated fraction of the lunar disk
 # Usage: moon_flum <tjd>
 # Returns: Illuminated fraction as decimal (e.g., "0.523")
@@ -324,14 +314,15 @@ get_moon_phase_emoji() {
     }'
 }
 
-# ==============================================================================
-# If sourced, export functions. If run directly, show demo output.
-# ==============================================================================
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    echo "=== Lunar Phase Calculator (Bash) ==="
-    echo ""
+get_all_moon_data(){
+    local year=$1
+    local month=$2
+    local day=$3
+    local hours=$4
+    local minutes=$5
+    local seconds=$6
     
-    tjd=$(tjd_now)
+    tjd=$(tjd_from_date "$year" "$month" "$day" "$hours" "$minutes" "$seconds")
     echo "Current Julian Day: $tjd"
     echo ""
     
@@ -351,4 +342,31 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     echo ""
     
     echo "Moon Phase Emoji: $(get_moon_phase_emoji "$elone")"
+}
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --year) year=$2; shift 2;;
+        --month) month=$2; shift 2;;
+        --day) day=$2; shift 2;;
+        --hours) hours=$2; shift 2;;
+        --minutes) minutes=$2; shift 2;;
+        --seconds) seconds=$2; shift 2;;
+        *) echo "Unknown parameter passed: $1"; exit 1;;
+    esac
+done
+
+[[ -z $year ]]    && year=$(date +%Y)
+[[ -z $month ]]   && month=$(date +%m)
+[[ -z $day ]]     && day=$(date +%d)
+[[ -z $hours ]]   && hours=$(date +%H)
+[[ -z $minutes ]] && minutes=$(date +%M)
+[[ -z $seconds ]] && seconds=$(date +%S)
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    echo "=== Lunar Phase Calculator (Bash) ==="
+    echo ""
+    
+    get_all_moon_data "$year" "$month" "$day" "$hours" "$minutes" "$seconds"
+    echo ""
 fi

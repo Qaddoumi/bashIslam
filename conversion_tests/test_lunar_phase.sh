@@ -16,6 +16,56 @@ NC='\033[0m' # No Color
 PASS_COUNT=0
 FAIL_COUNT=0
 
+
+# ------------------------------------------------------------------------------
+# gmod: Generalized modulo function (n mod m) also valid for negative values
+# Usage: gmod <n> <m>
+# ------------------------------------------------------------------------------
+gmod() {
+    local n=$1
+    local m=$2
+    awk -v n="$n" -v m="$m" "$AWK_LUNAR_LIB"'
+    {
+        print gmod(n, m)
+    }' <<< "run"
+}
+
+# ------------------------------------------------------------------------------
+# cosd: Cosine of an angle in degrees
+# Usage: cosd <degrees>
+# ------------------------------------------------------------------------------
+cosd() {
+    local x=$1
+    awk -v x="$x" "$AWK_LUNAR_LIB"'
+    {
+        print cosd(x)
+    }' <<< "run"
+}
+
+# ------------------------------------------------------------------------------
+# sind: Sine of an angle in degrees
+# Usage: sind <degrees>
+# ------------------------------------------------------------------------------
+sind() {
+    local x=$1
+    awk -v x="$x" "$AWK_LUNAR_LIB"'
+    {
+        print sind(x)
+    }' <<< "run"
+}
+
+# ------------------------------------------------------------------------------
+# acosd: Inverse cosine with angle in degrees
+# Usage: acosd <value>
+# ------------------------------------------------------------------------------
+acosd() {
+    local x=$1
+    awk -v x="$x" "$AWK_LUNAR_LIB"'
+    {
+        print acosd(x)
+    }' <<< "run"
+}
+
 # Comparison function with tolerance for floating point
 compare() {
     local test_name=$1

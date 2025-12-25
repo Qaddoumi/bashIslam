@@ -111,7 +111,7 @@ tjd_now() {
         OFMT = "%.17g"
     }
     {
-        m = month + 1
+        m = month
         y = year
         
         if (m < 3) {
@@ -148,7 +148,7 @@ tjd_from_date() {
         OFMT = "%.17g"
     }
     {
-        m = month + 1
+        m = month
         y = year
         
         if (m < 3) {

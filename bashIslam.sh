@@ -1340,12 +1340,33 @@ get_next_prayer() {
     fi
 }
 
+get_left_till_next_prayer() {
+    local fajr=$1 sunrise=$2 dhuhr=$3 asr=$4 maghreb=$5 ishaa=$6 hours=$7 minutes=$8 seconds=$9
+    local now=$(awk -v h="$hours" -v m="$minutes" -v s="$seconds" 'BEGIN {print h + m/60 + s/3600}')
+    local next_prayer=$(get_next_prayer "$fajr" "$sunrise" "$dhuhr" "$asr" "$maghreb" "$ishaa" "$hours" "$minutes" "$seconds")
+    local target=0
+
+    case "$next_prayer" in
+        "Fajr")    target=$fajr ;;
+        "Sunrise") target=$sunrise ;;
+        "Dhuhr")   target=$dhuhr ;;
+        "Asr")     target=$asr ;;
+        "Maghreb") target=$maghreb ;;
+        "Isha")    target=$ishaa ;;
+    esac
+
+    local diff=$(awk -v n="$now" -v t="$target" 'BEGIN { d = t - n; if (d < 0) d += 24; print d }')
+    format_time "$diff"
+}
+
 print_all_json() {
-    local lon=$1 lat=$2
-    local raw=$(calculate_prayer_times "$@")
+    local lon=$1 lat=$2 timezone=$3 year=$4 month=$5 day=$6 
+    local hours=$7 minutes=$8 seconds=$9
+    local method_id=${10:-2} asr_madhab=${11:-1} summer_time=${12:-0} elevation=${13:-0}
+
+    local raw=$(calculate_prayer_times "$lon" "$lat" "$timezone" "$year" "$month" "$day" "$method_id" "$asr_madhab" "$summer_time" "$elevation")
     read fajr sunrise dhuhr asr maghreb ishaa midnight last_third <<< "$raw"
 
-    local year=$4 month=$5 day=$6
     local hijri_raw=$(gregorian_to_hijri_date "$year" "$month" "$day")
     read h_year h_month h_day <<< "$hijri_raw"
 
@@ -1362,11 +1383,11 @@ print_all_json() {
 
     local islamic_calendars=$(get_all_islamic_calendars_json "$year" "$month" "$day")
 
-    local hours=$7 minutes=$8 seconds=$9
     local moon_data=$(get_all_moon_data_json "$year" "$month" "$day" "$hours" "$minutes" "$seconds")
 
     local current_prayer=$(get_current_prayer "$fajr" "$sunrise" "$dhuhr" "$asr" "$maghreb" "$ishaa" "$hours" "$minutes" "$seconds")
     local next_prayer=$(get_next_prayer "$fajr" "$sunrise" "$dhuhr" "$asr" "$maghreb" "$ishaa" "$hours" "$minutes" "$seconds")
+    local left_till_next_prayer=$(get_left_till_next_prayer "$fajr" "$sunrise" "$dhuhr" "$asr" "$maghreb" "$ishaa" "$hours" "$minutes" "$seconds")
 
     printf '{\n'
     printf '  "prayers": {\n'
@@ -1379,7 +1400,8 @@ print_all_json() {
     printf '    "midnight": "%s",\n'  "$(format_time $midnight)"
     printf '    "last_third": "%s",\n' "$(format_time $last_third)"
     printf '    "current_prayer": "%s",\n' "$current_prayer"
-    printf '    "next_prayer": "%s"\n' "$next_prayer"
+    printf '    "next_prayer": "%s",\n' "$next_prayer"
+    printf '    "left_till_next_prayer": "%s"\n' "$left_till_next_prayer"
     printf '  },\n'
     printf '  "hijri": {\n'
     printf '    "day": %d,\n'          "$h_day"
@@ -1443,5 +1465,5 @@ MADHAB=${MADHAB:-1}
 SUMMER_TIME=${SUMMER_TIME:-0}
 ELEV=${ELEV:-0}
 
-# example : ./combined.sh --lat 31.986 --lon 35.898 --timezone 3 --year 2025 --month 12 --day 24 --method 20 --madhab 1 --summer-time 0 --elevation 950
-print_all_json $LON $LAT $TIMEZONE $YEAR $MONTH $DAY $METHOD $MADHAB $SUMMER_TIME $ELEV
+# example : ./bashIslam.sh --lat 31.986 --lon 35.898 --timezone 3 --year 2025 --month 12 --day 24 --method 20 --madhab 1 --summer-time 0 --elevation 950
+print_all_json $LON $LAT $TIMEZONE $YEAR $MONTH $DAY $HOURS $MINUTES $SECONDS $METHOD $MADHAB $SUMMER_TIME $ELEV

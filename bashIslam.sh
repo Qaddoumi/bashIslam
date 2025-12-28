@@ -1298,11 +1298,53 @@ calculate_prayer_times() {
     echo "$fajr $sunrise $dhuhr $asr $maghreb $ishaa $midnight $last_third"
 }
 
-print_prayer_times_json() {
+get_current_prayer() {
+    local fajr=$1 sunrise=$2 dhuhr=$3 asr=$4 maghreb=$5 ishaa=$6 hours=$7 minutes=$8 seconds=$9
+    local now=$(awk -v h="$hours" -v m="$minutes" -v s="$seconds" 'BEGIN {print h + m/60 + s/3600}')
+    
+    if (( $(awk -v n="$now" -v t="$fajr" 'BEGIN {print (n < t)}') )); then
+        echo "Isha"
+    elif (( $(awk -v n="$now" -v t="$sunrise" 'BEGIN {print (n < t)}') )); then
+        echo "Fajr"
+    elif (( $(awk -v n="$now" -v t="$dhuhr" 'BEGIN {print (n < t)}') )); then
+        echo "Sunrise"
+    elif (( $(awk -v n="$now" -v t="$asr" 'BEGIN {print (n < t)}') )); then
+        echo "Dhuhr"
+    elif (( $(awk -v n="$now" -v t="$maghreb" 'BEGIN {print (n < t)}') )); then
+        echo "Asr"
+    elif (( $(awk -v n="$now" -v t="$ishaa" 'BEGIN {print (n < t)}') )); then
+        echo "Maghreb"
+    else
+        echo "Isha"
+    fi
+}
+
+get_next_prayer() {
+    local fajr=$1 sunrise=$2 dhuhr=$3 asr=$4 maghreb=$5 ishaa=$6 hours=$7 minutes=$8 seconds=$9
+    local now=$(awk -v h="$hours" -v m="$minutes" -v s="$seconds" 'BEGIN {print h + m/60 + s/3600}')
+    
+    if (( $(awk -v n="$now" -v t="$fajr" 'BEGIN {print (n < t)}') )); then
+        echo "Fajr"
+    elif (( $(awk -v n="$now" -v t="$sunrise" 'BEGIN {print (n < t)}') )); then
+        echo "Sunrise"
+    elif (( $(awk -v n="$now" -v t="$dhuhr" 'BEGIN {print (n < t)}') )); then
+        echo "Dhuhr"
+    elif (( $(awk -v n="$now" -v t="$asr" 'BEGIN {print (n < t)}') )); then
+        echo "Asr"
+    elif (( $(awk -v n="$now" -v t="$maghreb" 'BEGIN {print (n < t)}') )); then
+        echo "Maghreb"
+    elif (( $(awk -v n="$now" -v t="$ishaa" 'BEGIN {print (n < t)}') )); then
+        echo "Isha"
+    else
+        echo "Fajr"
+    fi
+}
+
+print_all_json() {
     local lon=$1 lat=$2
     local raw=$(calculate_prayer_times "$@")
     read fajr sunrise dhuhr asr maghreb ishaa midnight last_third <<< "$raw"
-    
+
     local year=$4 month=$5 day=$6
     local hijri_raw=$(gregorian_to_hijri_date "$year" "$month" "$day")
     read h_year h_month h_day <<< "$hijri_raw"
@@ -1311,7 +1353,7 @@ print_prayer_times_json() {
     local m_en=${HIJRI_MONTHS_EN[$((h_month-1))]}
     local h_full_ar=$(format_hijri $h_year $h_month $h_day 1)
     local h_full_en=$(format_hijri $h_year $h_month $h_day 2)
-    
+
     # Check if it is the last day of the Hijri month
     local is_last=$(is_last_hijri_day "$h_year" "$h_month" "$h_day" | tr '[:upper:]' '[:lower:]')
 
@@ -1323,6 +1365,9 @@ print_prayer_times_json() {
     local hours=$7 minutes=$8 seconds=$9
     local moon_data=$(get_all_moon_data_json "$year" "$month" "$day" "$hours" "$minutes" "$seconds")
 
+    local current_prayer=$(get_current_prayer "$fajr" "$sunrise" "$dhuhr" "$asr" "$maghreb" "$ishaa" "$hours" "$minutes" "$seconds")
+    local next_prayer=$(get_next_prayer "$fajr" "$sunrise" "$dhuhr" "$asr" "$maghreb" "$ishaa" "$hours" "$minutes" "$seconds")
+
     printf '{\n'
     printf '  "prayers": {\n'
     printf '    "fajr": "%s",\n'      "$(format_time $fajr)"
@@ -1332,7 +1377,9 @@ print_prayer_times_json() {
     printf '    "maghreb": "%s",\n'   "$(format_time $maghreb)"
     printf '    "ishaa": "%s",\n'     "$(format_time $ishaa)"
     printf '    "midnight": "%s",\n'  "$(format_time $midnight)"
-    printf '    "last_third": "%s"\n' "$(format_time $last_third)"
+    printf '    "last_third": "%s",\n' "$(format_time $last_third)"
+    printf '    "current_prayer": "%s",\n' "$current_prayer"
+    printf '    "next_prayer": "%s"\n' "$next_prayer"
     printf '  },\n'
     printf '  "hijri": {\n'
     printf '    "day": %d,\n'          "$h_day"
@@ -1397,4 +1444,4 @@ SUMMER_TIME=${SUMMER_TIME:-0}
 ELEV=${ELEV:-0}
 
 # example : ./combined.sh --lat 31.986 --lon 35.898 --timezone 3 --year 2025 --month 12 --day 24 --method 20 --madhab 1 --summer-time 0 --elevation 950
-print_prayer_times_json $LON $LAT $TIMEZONE $YEAR $MONTH $DAY $METHOD $MADHAB $SUMMER_TIME $ELEV
+print_all_json $LON $LAT $TIMEZONE $YEAR $MONTH $DAY $METHOD $MADHAB $SUMMER_TIME $ELEV
